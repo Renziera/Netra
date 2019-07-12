@@ -1,10 +1,11 @@
 package com.interpixel.netra;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -153,6 +154,11 @@ public class MainActivity extends AppCompatActivity implements FlingListener {
                         "geser ke bawah untuk memilih menu.", TextToSpeech.QUEUE_FLUSH, null);
             }
         });
+
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        if(!sp.contains("saldo")){
+            sp.edit().putInt("saldo", 190000000).apply();
+        }
     }
 
     @Override
@@ -197,9 +203,9 @@ public class MainActivity extends AppCompatActivity implements FlingListener {
         } else {
             if (currentMenu == accountInfoMenu) {
                 if (selectedMenu.peek() == 0) {
-
+                    startActivity(new Intent(this, SaldoActivity.class));
                 } else if (selectedMenu.peek() == 1) {
-
+                    tts.speak("Anda kurang beruntung, silahkan coba lagi", TextToSpeech.QUEUE_FLUSH, null);
                 }
             } else if (currentMenu == transferMenu) {
                 if (selectedMenu.peek() == 0) {
