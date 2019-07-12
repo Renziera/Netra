@@ -1,7 +1,9 @@
 package com.interpixel.netra;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -13,6 +15,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
+import java.util.Locale;
 import java.util.Stack;
 
 public class MainActivity extends AppCompatActivity implements FlingListener {
@@ -31,10 +34,26 @@ public class MainActivity extends AppCompatActivity implements FlingListener {
             R.drawable.mini_statement,
     };
 
+    private final int[] transferMenu = {
+            R.drawable.same_bank,
+            R.drawable.other_bank,
+            R.drawable.va_transfer,
+    };
+
+    private final int[] paymentMenu = {
+            R.drawable.internet_bill,
+            R.drawable.telephone_bill,
+            R.drawable.electricity_bill,
+            R.drawable.flight_ticket,
+            R.drawable.insurance,
+    };
+
     private int[] currentMenu = topMenu;
     private Stack<Integer> selectedMenu = new Stack<>();
     private Adapter adapter;
     private NetraViewPager viewpager;
+    private boolean mustListenPageChange = true;
+    private TextToSpeech tts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,40 +62,172 @@ public class MainActivity extends AppCompatActivity implements FlingListener {
 
         ImageView splashLogo = findViewById(R.id.splash_logo);
 
-        new Handler().postDelayed(() -> splashLogo.setVisibility(View.GONE), 1000);
+        viewpager = findViewById(R.id.viewpager);
+
+        new Handler().postDelayed(() -> {
+            splashLogo.setVisibility(View.GONE);
+            viewpager.setVisibility(View.VISIBLE);
+        }, 1000);
 
         adapter = new Adapter(getSupportFragmentManager());
 
-        viewpager = findViewById(R.id.viewpager);
         viewpager.setAdapter(adapter);
         viewpager.setFlingListener(this);
         viewpager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
-                Log.d("Hmm", "onPageSelected: " + position);
+                if (!mustListenPageChange) return;
                 selectedMenu.pop();
                 selectedMenu.push(position);
+                if (currentMenu == topMenu) {
+                    switch (position) {
+                        case 0:
+                            tts.speak("Informasi akun", TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        case 1:
+                            tts.speak("Transfer", TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        case 2:
+                            tts.speak("Pembayaran", TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        case 3:
+                            tts.speak("Pembayaran QR", TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        case 4:
+                            tts.speak("Belanja online", TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        case 5:
+                            tts.speak("Pengaturan akun", TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                    }
+                }
+                if (currentMenu == accountInfoMenu) {
+                    if (position == 0) {
+                        tts.speak("Informasi saldo", TextToSpeech.QUEUE_FLUSH, null);
+                    } else {
+                        tts.speak("Keterangan singkat", TextToSpeech.QUEUE_FLUSH, null);
+                    }
+                }
+                if (currentMenu == transferMenu) {
+                    switch (position) {
+                        case 0:
+                            tts.speak("Transfer bank netra", TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        case 1:
+                            tts.speak("Transfer bank lain", TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        case 2:
+                            tts.speak("Transfer akun virtual", TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                    }
+                }
+                if (currentMenu == paymentMenu) {
+                    switch (position) {
+                        case 0:
+                            tts.speak("Tagihan internet", TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        case 1:
+                            tts.speak("Tagihan telepon", TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        case 2:
+                            tts.speak("Tagihan listrik", TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        case 3:
+                            tts.speak("Tiket pesawat", TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                        case 4:
+                            tts.speak("Asuransi", TextToSpeech.QUEUE_FLUSH, null);
+                            break;
+                    }
+                }
             }
         });
         selectedMenu.push(0);
+
+        tts = new TextToSpeech(getApplicationContext(), status -> {
+            if (status != TextToSpeech.ERROR) {
+                tts.setLanguage(new Locale("id", "ID"));
+                tts.speak("Selamat datang di bank netra, " +
+                        "anda berada pada menu informasi akun." +
+                        "Geser ke samping untuk menu lain," +
+                        "geser ke bawah untuk memilih menu.", TextToSpeech.QUEUE_FLUSH, null);
+            }
+        });
     }
 
     @Override
     public void menuPrev() {
-        if(selectedMenu.size() < 2) return;
+        if (selectedMenu.size() < 2) return;
         currentMenu = topMenu;
         adapter.notifyDataSetChanged();
-        selectedMenu.pop();
+        int temp = selectedMenu.pop();
         viewpager.setCurrentItem(selectedMenu.peek(), false);
-        Log.d("Hmm", "menuPrev: " + selectedMenu.toString());
+        if(temp == selectedMenu.peek()){
+            if(temp == 0)
+                tts.speak("Informasi akun", TextToSpeech.QUEUE_FLUSH, null);
+            if(temp == 1)
+                tts.speak("Transfer", TextToSpeech.QUEUE_FLUSH, null);
+            if(temp == 2)
+                tts.speak("Pembayaran", TextToSpeech.QUEUE_FLUSH, null);
+        }
     }
 
     @Override
     public void menuNext() {
-        currentMenu = accountInfoMenu;
+        if (selectedMenu.size() == 1) {
+            if (selectedMenu.peek() == 0) {
+                currentMenu = accountInfoMenu;
+                tts.speak("Informasi saldo", TextToSpeech.QUEUE_FLUSH, null);
+            } else if (selectedMenu.peek() == 1) {
+                currentMenu = transferMenu;
+                tts.speak("Transfer bank netra", TextToSpeech.QUEUE_FLUSH, null);
+            } else if (selectedMenu.peek() == 2) {
+                currentMenu = paymentMenu;
+                tts.speak("Tagihan internet", TextToSpeech.QUEUE_FLUSH, null);
+            } else {
+                if (selectedMenu.peek() == 3) {
+                    tts.speak("Orang buta tidak bisa scan QR", TextToSpeech.QUEUE_FLUSH, null);
+                } else if (selectedMenu.peek() == 4) {
+                    tts.speak("Bank ini belum punya mitra", TextToSpeech.QUEUE_FLUSH, null);
+                } else if (selectedMenu.peek() == 5) {
+                    tts.speak("Silahkan ke bank untuk mengubah pengaturan akun", TextToSpeech.QUEUE_FLUSH, null);
+                }
+                return;
+            }
+        } else {
+            if (currentMenu == accountInfoMenu) {
+                if (selectedMenu.peek() == 0) {
+
+                } else if (selectedMenu.peek() == 1) {
+
+                }
+            } else if (currentMenu == transferMenu) {
+                if (selectedMenu.peek() == 0) {
+                    startActivity(new Intent(this, InputNumberActivity.class));
+                } else if (selectedMenu.peek() == 1) {
+                    tts.speak("Layanan belum tersedia", TextToSpeech.QUEUE_FLUSH, null);
+                } else if (selectedMenu.peek() == 2) {
+                    tts.speak("Layanan belum tersedia", TextToSpeech.QUEUE_FLUSH, null);
+                }
+            } else {
+                tts.speak("Layanan belum tersedia", TextToSpeech.QUEUE_FLUSH, null);
+            }
+            return;
+        }
+        mustListenPageChange = false;
         adapter.notifyDataSetChanged();
         selectedMenu.push(0);
         viewpager.setCurrentItem(selectedMenu.peek(), false);
+        mustListenPageChange = true;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
+        }
     }
 
     class Adapter extends FragmentStatePagerAdapter {
