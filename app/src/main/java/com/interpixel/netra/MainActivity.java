@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements FlingListener {
                 if (currentMenu == transferMenu) {
                     switch (position) {
                         case 0:
-                            tts.speak("Transfer bank netra", TextToSpeech.QUEUE_FLUSH, null);
+                            tts.speak("Transfer bank fision", TextToSpeech.QUEUE_FLUSH, null);
                             break;
                         case 1:
                             tts.speak("Transfer bank lain", TextToSpeech.QUEUE_FLUSH, null);
@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements FlingListener {
         tts = new TextToSpeech(getApplicationContext(), status -> {
             if (status != TextToSpeech.ERROR) {
                 tts.setLanguage(new Locale("id", "ID"));
-                tts.speak("Selamat datang di bank netra, " +
+                tts.speak("Selamat datang di fision, " +
                         "anda berada pada menu informasi akun." +
                         "Geser ke samping untuk menu lain," +
                         "geser ke bawah untuk memilih menu.", TextToSpeech.QUEUE_FLUSH, null);
@@ -186,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements FlingListener {
                 tts.speak("Informasi saldo", TextToSpeech.QUEUE_FLUSH, null);
             } else if (selectedMenu.peek() == 1) {
                 currentMenu = transferMenu;
-                tts.speak("Transfer bank netra", TextToSpeech.QUEUE_FLUSH, null);
+                tts.speak("Transfer bank fision", TextToSpeech.QUEUE_FLUSH, null);
             } else if (selectedMenu.peek() == 2) {
                 currentMenu = paymentMenu;
                 tts.speak("Tagihan internet", TextToSpeech.QUEUE_FLUSH, null);
